@@ -38,6 +38,12 @@ import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { TruncatedTooltip } from "@/components/ui/truncated-tooltip";
 import { DEFAULT_TABLE_LIMIT } from "@/consts";
 import {
@@ -484,17 +490,16 @@ function EditKnowledgeFileDialog({
 
 function FileStatusBadge({ file }: { file: KnowledgeFile }) {
   if (file.processingStatus !== "completed") {
-    const label =
-      file.processingStatus === "processing"
-        ? "Extracting"
-        : file.processingStatus === "failed"
-          ? "Failed"
-          : "Queued";
-    return (
+    const isFailed = file.processingStatus === "failed";
+    const label = file.processingStatus === "processing"
+      ? "Extracting"
+      : isFailed
+        ? "Failed"
+        : "Queued";
+
+    const badge = (
       <Badge
-        variant={
-          file.processingStatus === "failed" ? "destructive" : "secondary"
-        }
+        variant={isFailed ? "destructive" : "secondary"}
         className="text-xs"
       >
         {file.processingStatus === "processing" && (
@@ -503,6 +508,21 @@ function FileStatusBadge({ file }: { file: KnowledgeFile }) {
         {label}
       </Badge>
     );
+
+    if (isFailed && file.processingError) {
+      return (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>{badge}</TooltipTrigger>
+            <TooltipContent side="bottom" className="max-w-xs break-words">
+              {file.processingError}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      );
+    }
+
+    return badge;
   }
 
   return (
